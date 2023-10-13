@@ -22,6 +22,15 @@ except:
     from proto import liqi_pb2 as pb
 
 
+keys = [0x84, 0x5e, 0x4e, 0x42, 0x39, 0xa2, 0x1f, 0x60, 0x1c]
+def decode(data: bytes):
+    data = bytearray(data)
+    for i in range(len(data)):
+        u = (23 ^ len(data)) + 5 * i + keys[i % len(keys)] & 255
+        data[i] ^= u
+    return bytes(data)
+
+
 class MsgType(Enum):
     Notify = 1
     Req = 2
@@ -63,7 +72,7 @@ class LiqiProto:
             dict_obj = MessageToDict(proto_obj)
             if 'data' in dict_obj:
                 B = base64.b64decode(dict_obj['data'])
-                action_proto_obj = getattr(pb, dict_obj['name']).FromString(B)
+                action_proto_obj = getattr(pb, dict_obj['name']).FromString(decode(B))
                 action_dict_obj = MessageToDict(action_proto_obj)
                 dict_obj['data'] = action_dict_obj
             msg_id = self.tot
